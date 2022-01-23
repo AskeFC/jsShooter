@@ -2,6 +2,8 @@
   "name": "jsShooter",
   "version": "2.0.0",
   "description": "Nodejs and html5 game",
+  "keywords": [],
+  "license": "MIT",
   "main": "app.js",
   "scripts": {
     "test": "node --debug --use_strict app.js",
@@ -14,12 +16,11 @@
   },
   "dependencies": {
     "colors": ">=1.4.0",
-    "express": ">=4.17.1",
-    "socket.io": ">=2.3.0",
+    "express": ">=4.17.2",
+    "socket.io": ">=4.4.1",
     "socketio-wildcard": ">=2.0.0",
-    "ws": ">=7.3.1"
+    "ws": ">=8.4.0"
   },
-  "keywords": [],
   "author": "AntonUden",
   "contributors": [
     {
@@ -28,9 +29,8 @@
       "url": "https://AskeFC.net"
     }
   ],
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/AskeFC/jsShooter/issues"
   },
-  "homepage": "https://github.com/AskeFC/jsShooter#readme"
+  "homepage": "https://shooter.askefc.net"
 }
