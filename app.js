@@ -18,9 +18,9 @@ var fps = 30;
 //-------------------------------------
 
 var port = process.env.PORT || 80;
-if(process.env.PORT == undefined) {
+if (process.env.PORT == undefined) {
 	console.log(colors.blue("[jsShooter] No port defined using default (80)"));
-}
+};
 
 serv.listen(port);
 var io = require("socket.io")(serv, {});
@@ -41,17 +41,17 @@ var POWERUP_LIST = {};
 // Npc shooter object
 var NPCShooter = function(id, x, y) {
 	var self = {
-		id:id,
-		x:x,
-		y:y,
-		targetPlayer:-1,
-		hp:3,
-		activationTimer:100
-	}
+		id: id,
+		x: x,
+		y: y,
+		targetPlayer: -1,
+		hp: 3,
+		activationTimer: 100
+	};
 
 	if(countOPPlayers() > 0) {
 		self.hp = 10;
-	}
+	};
 
 	self.fireBullet = function() {
 		try {
@@ -61,9 +61,9 @@ var NPCShooter = function(id, x, y) {
 		} catch(err) {
 			if(debug) {
 				throw err;
-			}
-		}
-	}
+			};
+		};
+	};
 
 	self.update = function() {
 		if(self.activationTimer > 0) {
@@ -82,9 +82,9 @@ var NPCShooter = function(id, x, y) {
 						if(isOverPower(player)) {
 							let d = getDistance(self.x, self.y, player.x, player.y);
 							dist[player.id] = d;
-						}
-					}
-				}
+						};
+					};
+				};
 				let target = getSmallest(dist);
 				if(!(target == undefined)) {
 					self.targetPlayer = target;
@@ -92,20 +92,20 @@ var NPCShooter = function(id, x, y) {
  						let dir = Math.atan2(PLAYER_LIST[self.targetPlayer].y - self.y, PLAYER_LIST[self.targetPlayer].x - self.x) * 180 / Math.PI;
  						self.x += Math.cos(dir/180*Math.PI) * 0.5;
  						self.y += Math.sin(dir/180*Math.PI) * 0.5;
- 					}
+ 					};
 				} else {
 					self.targetPlayer = -1;
-				}
+				};
 			} catch(err) {
 				if(debug) {
 					throw err;
-				}
-			}
-		}
+				};
+			};
+		};
 		if(self.hp <= 0) {
 			delete NPCSHOOTER_LIST[self.id];
-		}
-	}
+		};
+	};
 
 	return self;
 }
@@ -113,14 +113,14 @@ var NPCShooter = function(id, x, y) {
 // NPC attacker object
 var NPCAttacker = function(id, x, y) {
 	var self = {
-		id:id,
-		x:x,
-		y:y,
-		targetPlayer:-1,
-		attackCooldown:-1,
-		hp:5,
-		activationTimer:100
-	}
+		id: id,
+		x: x,
+		y: y,
+		targetPlayer: -1,
+		attackCooldown: -1,
+		hp: 5,
+		activationTimer: 100
+	};
 
 	self.update = function() {
 		if(self.activationTimer > 0) {
@@ -133,28 +133,28 @@ var NPCAttacker = function(id, x, y) {
 					if(player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
 						let d = getDistance(self.x, self.y, player.x, player.y);
 						dist[player.id] = d;
-					}
-				}
+					};
+				};
 				let target = getSmallest(dist);
 				if(!(target == undefined)) {
 					self.targetPlayer = target;
 				} else {
 					self.targetPlayer = -1;
-				}
+				};
 
 				if(!(self.targetPlayer == -1)) {
  					if(getDistance(self.x, self.y, PLAYER_LIST[self.targetPlayer].x, PLAYER_LIST[self.targetPlayer].y) > 8) {
  						let dir = Math.atan2(PLAYER_LIST[self.targetPlayer].y - self.y, PLAYER_LIST[self.targetPlayer].x - self.x) * 180 / Math.PI;
  						self.x += Math.cos(dir/180*Math.PI) * 2;
  						self.y += Math.sin(dir/180*Math.PI) * 2;
- 					}
+ 					};
  					
-  				}
+  				};
 			} catch(err) {
 				if(debug) {
 					throw err;
-				}
-			}
+				};
+			};
 		}
 		if(self.attackCooldown > 0) {
 			self.attackCooldown--;
