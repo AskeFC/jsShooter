@@ -4,7 +4,6 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import colors from 'colors/safe.js';
-import middleware from 'socketio-wildcard';
 
 const app = express();
 const serv = createServer(app);
@@ -33,7 +32,6 @@ if (process.env.PORT == undefined) {
 };
 
 serv.listen(port);
-io.use(middleware);
 
 console.log(colors.green("[jsShooter] Socket started on port " + port));
 
