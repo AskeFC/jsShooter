@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import colors from 'colors/safe';
-import middleware from 'socketio-wildcard';
+const middleware = require('socketio-wildcard');
 
 const app = express();
 const serv = createServer(app);
