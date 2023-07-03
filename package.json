@@ -6,9 +6,12 @@
   "license": "MIT",
   "main": "app.js",
   "scripts": {
-    "test": "node --debug --use_strict app.js",
-    "inspect": "node --inspect app.js",
-    "start": "node app.js"
+    "nodetest": "node --debug --use_strict app.js",
+    "buntest": "bun --debug --use_strict app.js",
+    "nodeinspect": "node --inspect app.js",
+    "buninspect": "bun --inspect app.js",
+    "nodestart": "node app.js",
+    "bunstart": "bun app.js"
   },
   "repository": {
     "type": "git",
