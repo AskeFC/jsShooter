@@ -179,7 +179,7 @@ var NPCAttacker = function(id, x, y) {
 		};
 		if(self.hp <= 0) {
 			delete ATTACKER_LIST[self.id];
-			delete self;
+			self = null;
 		};
 	};
 	return self;
