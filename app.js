@@ -3,8 +3,8 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import colors from 'colors/safe';
-const middleware = require('socketio-wildcard');
+import colors from 'colors/safe.js';
+import middleware from 'socketio-wildcard';
 
 const app = express();
 const serv = createServer(app);
@@ -12,6 +12,7 @@ const io = new Server(serv);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 const debug = typeof v8debug === 'object' || /--debug/.test(process.execArgv.join(' '));
 
