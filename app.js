@@ -291,7 +291,7 @@ var Bullet = function(id, ownerID, x, y, angle, size) {
 
 		if(self.lifetime <= 0) {
 			delete BULLET_LIST[self.id];
-			delete self;
+			self = null;
 		};
 	};
 	return self;
@@ -457,7 +457,7 @@ var PowerUp = function(x, y, id) {
 
     self.destroy = function() {
 		delete POWERUP_LIST[self.id];
-		delete self;
+		self = null;
 	};
 
 	return self;
