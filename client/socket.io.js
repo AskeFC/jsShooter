@@ -1,3 +1,5 @@
+'use strict';
+
 /*!
  * Socket.IO v2.1.1
  * (c) 2014-2018 Guillermo Rauch

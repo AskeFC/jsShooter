@@ -1,3 +1,5 @@
+'use strict';
+
 var uiDiv = document.getElementById('uiDiv');
 var countdownDiv = document.getElementById('countdown');
 var scoreDiv = document.getElementById('scoreDiv');
