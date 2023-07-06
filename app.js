@@ -383,7 +383,7 @@ const Player = (id) => {
 	self.fireBullet = () => {
 		if (self.joinKickTimeout < 0 && self.spawnCooldown < 0) {
 			const bsize = (self.doubleBulletSize ? 1.5 : 1);
-			const id = Math.random() * 2000;
+			let id = Math.random() * 2000;
 			BULLET_LIST[id] = Bullet(id, self.id, self.x, self.y, Math.atan2(self.my - self.y, self.mx - self.x) * 180 / Math.PI, bsize);
 			if (self.dualBullets) {
 				id = Math.random() * 2000;
