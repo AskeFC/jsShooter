@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 const debug = typeof v8debug === 'object' || /--debug/.test(process.execArgv.join(' '));
 
 console.log(colors.green("[jsShooter] Starting server..."));
-app.get('/',function(req, res) {
+app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/client/index.html');
 });
 app.use('/client',express.static(__dirname + '/client'));
@@ -37,19 +37,19 @@ serv.listen(port);
 
 console.log(colors.green("[jsShooter] Socket started on port " + port));
 
-var SOCKET_LIST = {};
-var SOCKET_ACTIVITY = {};
-var PLAYER_LIST = {};
-var BULLET_LIST = {};
-var BLOCK_LIST = {};
-var ATTACKER_LIST = {};
-var NPCSHOOTER_LIST = {};
-var POWERUP_LIST = {};
+let SOCKET_LIST = {};
+let SOCKET_ACTIVITY = {};
+let PLAYER_LIST = {};
+let BULLET_LIST = {};
+let BLOCK_LIST = {};
+let ATTACKER_LIST = {};
+let NPCSHOOTER_LIST = {};
+let POWERUP_LIST = {};
 
 // ---------- Entities ----------
 // Npc shooter object
-var NPCShooter = function(id, x, y) {
-	var self = {
+const NPCShooter = (id, x, y) => {
+	let self = {
 		id: id,
 		x: x,
 		y: y,
@@ -58,55 +58,54 @@ var NPCShooter = function(id, x, y) {
 		activationTimer: 100
 	};
 
-	if(countOPPlayers() > 0) {
+	if (countOPPlayers() > 0) {
 		self.hp = 10;
 	};
 
-	self.fireBullet = function() {
+	self.fireBullet = () => {
 		try {
 			let bID = Math.random() * 2000;
 			let target = PLAYER_LIST[self.targetPlayer];
 			BULLET_LIST[bID] = Bullet(bID, -1, self.x, self.y, Math.atan2(target.y - self.y, target.x - self.x) * 180 / Math.PI, 1);
 		} catch(err) {
-			if(debug) {
+			if (debug) {
 				throw err;
 			};
 		};
 	};
 
-	self.update = function() {
-		if(self.activationTimer > 0) {
-			self.activationTimer--;
+	self.update = () => {
+		if (self.activationTimer > 0) {
+			--self.activationTimer;
 		} else {
 			try {
 				let dist = {};
-				for(let p in PLAYER_LIST) {
-					let player = PLAYER_LIST[p];
-					if(countOPPlayers() < 1) {
-						if(player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
-							let d = getDistance(self.x, self.y, player.x, player.y);
+				for (let p in PLAYER_LIST) {
+					const player = PLAYER_LIST[p];
+                    const d = getDistance(self.x, self.y, player.x, player.y);
+					if (countOPPlayers() < 1) {
+						if (player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
 							dist[player.id] = d;
-						}
+						};
 					} else {
-						if(isOverPower(player)) {
-							let d = getDistance(self.x, self.y, player.x, player.y);
+						if (isOverPower(player)) {
 							dist[player.id] = d;
 						};
 					};
 				};
-				let target = getSmallest(dist);
-				if(!(target == undefined)) {
+				const target = getSmallest(dist);
+				if (!(target == undefined)) {
 					self.targetPlayer = target;
-					if(getDistance(self.x, self.y, PLAYER_LIST[self.targetPlayer].x, PLAYER_LIST[self.targetPlayer].y) > 200 && countOPPlayers() < 1) {
- 						let dir = Math.atan2(PLAYER_LIST[self.targetPlayer].y - self.y, PLAYER_LIST[self.targetPlayer].x - self.x) * 180 / Math.PI;
+					if (getDistance(self.x, self.y, PLAYER_LIST[self.targetPlayer].x, PLAYER_LIST[self.targetPlayer].y) > 200 && countOPPlayers() < 1) {
+ 						const dir = Math.atan2(PLAYER_LIST[self.targetPlayer].y - self.y, PLAYER_LIST[self.targetPlayer].x - self.x) * 180 / Math.PI;
  						self.x += Math.cos(dir/180*Math.PI) * 0.5;
  						self.y += Math.sin(dir/180*Math.PI) * 0.5;
  					};
 				} else {
 					self.targetPlayer = -1;
 				};
-			} catch(err) {
-				if(debug) {
+			} catch (err) {
+				if (debug) {
 					throw err;
 				};
 			};
@@ -115,13 +114,12 @@ var NPCShooter = function(id, x, y) {
 			delete NPCSHOOTER_LIST[self.id];
 		};
 	};
-
 	return self;
 };
 
 // NPC attacker object
-var NPCAttacker = function(id, x, y) {
-	var self = {
+const NPCAttacker = (id, x, y) => {
+	let self = {
 		id: id,
 		x: x,
 		y: y,
@@ -131,56 +129,52 @@ var NPCAttacker = function(id, x, y) {
 		activationTimer: 100
 	};
 
-	self.update = function() {
-		if(self.activationTimer > 0) {
-			self.activationTimer--;
+	self.update = () => {
+		if (self.activationTimer > 0) {
+			--self.activationTimer;
 		} else {
 			try {
 				let dist = {};
-				for(let p in PLAYER_LIST) {
-					let player = PLAYER_LIST[p];
-					if(player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
-						let d = getDistance(self.x, self.y, player.x, player.y);
+				for (let p in PLAYER_LIST) {
+					const player = PLAYER_LIST[p];
+					if (player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
+						const d = getDistance(self.x, self.y, player.x, player.y);
 						dist[player.id] = d;
 					};
 				};
-				let target = getSmallest(dist);
-				if(!(target == undefined)) {
-					self.targetPlayer = target;
-				} else {
-					self.targetPlayer = -1;
-				};
+				const target = getSmallest(dist);
+                self.targetPlayer = (!(target == undefined)) ? target : -1 ;
 
-				if(!(self.targetPlayer == -1)) {
- 					if(getDistance(self.x, self.y, PLAYER_LIST[self.targetPlayer].x, PLAYER_LIST[self.targetPlayer].y) > 8) {
- 						let dir = Math.atan2(PLAYER_LIST[self.targetPlayer].y - self.y, PLAYER_LIST[self.targetPlayer].x - self.x) * 180 / Math.PI;
+				if (!(self.targetPlayer == -1)) {
+ 					if (getDistance(self.x, self.y, PLAYER_LIST[self.targetPlayer].x, PLAYER_LIST[self.targetPlayer].y) > 8) {
+ 						const dir = Math.atan2(PLAYER_LIST[self.targetPlayer].y - self.y, PLAYER_LIST[self.targetPlayer].x - self.x) * 180 / Math.PI;
  						self.x += Math.cos(dir/180*Math.PI) * 2;
  						self.y += Math.sin(dir/180*Math.PI) * 2;
  					};
  					
   				};
-			} catch(err) {
-				if(debug) {
+			} catch (err) {
+				if (debug) {
 					throw err;
 				};
 			};
 		};
-		if(self.attackCooldown > 0) {
-			self.attackCooldown--;
+		if (self.attackCooldown > 0) {
+			--self.attackCooldown;
 		} else {
-			if(!self.activationTimer > 0) {
-				if(countActivePlayers() > 0) {
-					for(let p in PLAYER_LIST) {
-						let player = PLAYER_LIST[p];
-						if(getDistance(self.x, self.y, player.x, player.y) < 10 && player.powerupTime < 1) {
-							player.hp --;
+			if (!self.activationTimer > 0) {
+				if (countActivePlayers() > 0) {
+					for (let p in PLAYER_LIST) {
+						const player = PLAYER_LIST[p];
+						if (getDistance(self.x, self.y, player.x, player.y) < 10 && player.powerupTime < 1) {
+							--player.hp;
 							self.attackCooldown = (1000 / fps) * 1;
 						};
 					};
 				};
 			};
 		};
-		if(self.hp <= 0) {
+		if (self.hp <= 0) {
 			delete ATTACKER_LIST[self.id];
 			self = null;
 		};
@@ -189,47 +183,52 @@ var NPCAttacker = function(id, x, y) {
 };
 
 // Bullet object
-var Bullet = function(id, ownerID, x, y, angle, size) {
-	var self = {
-		size:size,
-		id:id,
-		lifetime:200,
-		x:x,
-		y:y,
-		xvel:Math.cos(angle/180*Math.PI) * 10,
-		yvel:Math.sin(angle/180*Math.PI) * 10,
-		owner:ownerID
+const Bullet = (id, ownerID, x, y, angle, size) => {
+	let self = {
+		size: size,
+		id: id,
+		lifetime: 200,
+		x: x,
+		y: y,
+		xvel: Math.cos(angle/180*Math.PI) * 10,
+		yvel: Math.sin(angle/180*Math.PI) * 10,
+		owner: ownerID
 	};
-	self.update = function() {
+	self.update = () => {
 		self.x += self.xvel;
 		self.y += self.yvel;
-		self.lifetime--;
-		let extraSize = 4 * (self.size - 1);
-		for(let p in PLAYER_LIST) {
+		--self.lifetime;
+		const extraSize = 4 * (self.size - 1);
+		for (let p in PLAYER_LIST) {
 			let player = PLAYER_LIST[p];
-			if(player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
+			if (player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
 				if (self.x >= (player.x - 9) - extraSize && self.x <= player.x + 9 + extraSize) {
 					if (self.y >= (player.y - 9) - extraSize && self.y <= player.y + 9) {
-						if(!(self.owner == player.id)) {
-							if(!(player.powerupTime > 0)) player.hp--;
+						if (!(self.owner == player.id)) {
+							if (!(player.powerupTime > 0)) { --player.hp; };
 							let owner = getPlayerByID(self.owner);
-							if(!(owner == undefined)) {
+							if (!(owner == undefined)) {
 								owner.score += 10;
-								if(player.hp <= 0) {
+								if (player.hp <= 0) {
 									owner.score += 100;
 									owner.score += Math.floor(player.score / 4);
-									if(player.doubleFireSpeed)
-										owner.score+=500;
-									if(player.quadrupleFireSpeed)
-										owner.score+=2000;
-									if(player.dualBullets)
-										owner.score+=1250;
-									if(player.quadrupleBullets)
-										owner.score+=2000;
-									if(player.doubleBulletSize)
-										owner.score+=2000;
-									if(owner.hp < owner.maxHp) {
-										owner.hp++;
+									if (player.doubleFireSpeed) {
+                                        owner.score += 500;
+                                    };
+									if (player.quadrupleFireSpeed) {
+                                        owner.score += 2000;
+                                    };
+									if (player.dualBullets) {
+                                        owner.score += 1250;
+                                    };
+									if (player.quadrupleBullets) {
+                                        owner.score += 2000;
+                                    };
+									if (player.doubleBulletSize) {
+                                        owner.score += 2000;
+                                    };
+									if (owner.hp < owner.maxHp) {
+                                        ++owner.hp;
 									};
 								};
 							};
@@ -241,12 +240,12 @@ var Bullet = function(id, ownerID, x, y, angle, size) {
 		};
 
 		for(let b in BLOCK_LIST) {
-			let block = BLOCK_LIST[b];
+			const block = BLOCK_LIST[b];
 			if (self.x >= (block.x - 8) - extraSize && self.x <= block.x + 8 + extraSize) {
 				if (self.y >= (block.y - 8) - extraSize && self.y <= block.y + 8) {
 					delete BLOCK_LIST[block.id];
 					let owner = getPlayerByID(self.owner);
-					if(!(owner == undefined)) {
+					if (!(owner == undefined)) {
 						owner.score += 50;
 					};
 					self.lifetime = 0;
@@ -258,11 +257,11 @@ var Bullet = function(id, ownerID, x, y, angle, size) {
 			let at = ATTACKER_LIST[na];
 			if (self.x >= (at.x - 7) - extraSize && self.x <= at.x + 7 + extraSize) {
 				if (self.y >= (at.y - 7) - extraSize&& self.y <= at.y + 7 + extraSize) {
-					at.hp--;
+					--at.hp;
 					let owner = getPlayerByID(self.owner);
-					if(!(owner == undefined)) {
+					if (!(owner == undefined)) {
 						owner.score += 10;
-						if(at.hp <= 0) {
+						if (at.hp <= 0) {
 							owner.score += 100;
 						};
 					};
@@ -275,11 +274,11 @@ var Bullet = function(id, ownerID, x, y, angle, size) {
 			let sh = NPCSHOOTER_LIST[s];
 			if (self.x >= (sh.x - 7) - extraSize && self.x <= sh.x + 7 + extraSize) {
 				if (self.y >= (sh.y - 7) - extraSize && self.y <= sh.y + 7 + extraSize) {
-					sh.hp--;
+					--sh.hp;
 					let owner = getPlayerByID(self.owner);
-					if(!(owner == undefined)) {
+					if (!(owner == undefined)) {
 						owner.score += 10;
-						if(sh.hp <= 0) {
+						if (sh.hp <= 0) {
 							owner.score += 250;
 						};
 					};
@@ -288,11 +287,11 @@ var Bullet = function(id, ownerID, x, y, angle, size) {
 			};
 		};
 
-		if(self.x < 0 || self.x > 1200 || self.y < 0 || self.y > 600) {
+		if (self.x < 0 || self.x > 1200 || self.y < 0 || self.y > 600) {
 			self.lifetime = 0;
 		};
 
-		if(self.lifetime <= 0) {
+		if (self.lifetime <= 0) {
 			delete BULLET_LIST[self.id];
 			self = null;
 		};
@@ -301,48 +300,48 @@ var Bullet = function(id, ownerID, x, y, angle, size) {
 };
 
 // NPCBlock object
-var NPCBlock = function(id) {
-	var self = {
-		id:id,
-		x:Math.floor(Math.random() * 1180) + 10,
-		y:Math.floor(Math.random() * 580) + 10
+const NPCBlock = (id) => {
+	let self = {
+		id: id,
+		x: Math.floor(Math.random() * 1180) + 10,
+		y: Math.floor(Math.random() * 580) + 10
 	};
 	return self;
 };
 
 // Player object
-var Player = function(id) {
-	var self = {
-		x:Math.floor(Math.random() * 1160) + 20,
-		y:Math.floor(Math.random() * 560) + 20,
-		id:id,
-		spawnCooldown:-1,
-		afkKickTimeout:100,
-		joinKickTimeout:80,
-		pressingRight:false,
-		pressingLeft:false,
-		pressingUp:false,
-		pressingDown:false,
-		maxHp:10,
-		hp:10,
+const Player = (id) => {
+	let self = {
+		x: Math.floor(Math.random() * 1160) + 20,
+		y: Math.floor(Math.random() * 560) + 20,
+		id: id,
+		spawnCooldown: -1,
+		afkKickTimeout: 100,
+		joinKickTimeout: 80,
+		pressingRight: false,
+		pressingLeft: false,
+		pressingUp: false,
+		pressingDown: false,
+		maxHp: 10,
+		hp: 10,
 		color: Math.floor(Math.random() * 360),
-		regen:-1,
-		afk:false,
-		mx:0,
-		my:0,
-		powerupTime:-1,
-		score:0,
-		maxSpeed:3,
-		name:"Unnamed",
-		doubleFireSpeed:false,
-		doubleBulletSize:false,
-		quadrupleFireSpeed:false,
-		dualBullets:false,
-		quadrupleBullets:false,
-		upgHPPrice:500
+		regen: -1,
+		afk: false,
+		mx: 0,
+		my: 0,
+		powerupTime: -1,
+		score: 0,
+		maxSpeed: 3,
+		name: "Unnamed",
+		doubleFireSpeed: false,
+		doubleBulletSize: false,
+		quadrupleFireSpeed: false,
+		dualBullets: false,
+		quadrupleBullets: false,
+		upgHPPrice: 500
 	};
 
-	self.respawn = function() {
+	self.respawn = () => {
 		self.x = Math.floor(Math.random() * 1160) + 20;
 		self.y = Math.floor(Math.random() * 560) + 20;
 		self.pressingRight = false;
@@ -353,23 +352,19 @@ var Player = function(id) {
 		self.powerupTime = -1;
 		self.score = Math.round(self.score / 3);
 
-		if(self.doubleFireSpeed) {
+		if (self.doubleFireSpeed) {
 			self.score += 400;
 		};
-
-		if(self.quadrupleFireSpeed) {
+		if (self.quadrupleFireSpeed) {
 			self.score += 1600;
 		};
-
-		if(self.doubleBulletSize) {
+		if (self.doubleBulletSize) {
 			self.score += 1600;
 		};
-
-		if(self.dualBullets) {
+		if (self.dualBullets) {
 			self.score += 1000;
 		};
-
-		if(self.quadrupleBullets) {
+		if (self.quadrupleBullets) {
 			self.score += 1600;
 		};
 
@@ -385,15 +380,15 @@ var Player = function(id) {
 		self.spawnCooldown = 10;
 	};
 
-	self.fireBullet = function() {
-		if(self.joinKickTimeout < 0 && self.spawnCooldown < 0) {
-			let bsize = (self.doubleBulletSize ? 1.5 : 1);
-			let id = Math.random() * 2000;
+	self.fireBullet = () => {
+		if (self.joinKickTimeout < 0 && self.spawnCooldown < 0) {
+			const bsize = (self.doubleBulletSize ? 1.5 : 1);
+			const id = Math.random() * 2000;
 			BULLET_LIST[id] = Bullet(id, self.id, self.x, self.y, Math.atan2(self.my - self.y, self.mx - self.x) * 180 / Math.PI, bsize);
-			if(self.dualBullets) {
+			if (self.dualBullets) {
 				id = Math.random() * 2000;
 				BULLET_LIST[id] = Bullet(id, self.id, self.x, self.y, (Math.atan2(self.my - self.y, self.mx - self.x) * 180 / Math.PI)-180, bsize);
-				if(self.quadrupleBullets) {
+				if (self.quadrupleBullets) {
 					id = Math.random() * 2000;
 					BULLET_LIST[id] = Bullet(id, self.id, self.x, self.y, (Math.atan2(self.my - self.y, self.mx - self.x) * 180 / Math.PI)-90, bsize);
 					id = Math.random() * 2000;
@@ -403,34 +398,30 @@ var Player = function(id) {
 		};
 	};
 
-	self.update = function() {
-		if(self.powerupTime > 0) {
-			self.maxSpeed = 4;
-		} else {
-			self.maxSpeed = 3;
-		};
-		if(self.hp <= 0) {
+	self.update = () => {
+        self.maxSpeed = (self.powerupTime > 0) ? 4 : 3;
+		if (self.hp <= 0) {
 			self.respawn();
 			return;
 		};
-		if(self.spawnCooldown < 0) {
-			if(self.pressingRight) {
-				if(self.x < (1200 - self.maxSpeed) - 10) {
+		if (self.spawnCooldown < 0) {
+			if (self.pressingRight) {
+				if (self.x < (1200 - self.maxSpeed) - 10) {
 					self.x += self.maxSpeed;
 				};
 			};
-			if(self.pressingLeft) {
-				if(self.x > (0 + self.maxSpeed) + 10) {
+			if (self.pressingLeft) {
+				if (self.x > (0 + self.maxSpeed) + 10) {
 					self.x -= self.maxSpeed;
 				};
 			};
-			if(self.pressingUp) {
-				if(self.y > (0 + self.maxSpeed) + 10) {
+			if (self.pressingUp) {
+				if (self.y > (0 + self.maxSpeed) + 10) {
 					self.y -= self.maxSpeed;
 				};
 			};
-			if(self.pressingDown) {
-				if(self.y < (600 - self.maxSpeed) - 10) {
+			if (self.pressingDown) {
+				if (self.y < (600 - self.maxSpeed) - 10) {
 					self.y += self.maxSpeed;
 				};
 			};
@@ -440,17 +431,17 @@ var Player = function(id) {
 };
 
 //Powerup object
-var PowerUp = function(x, y, id) {
-	var self = {
-		x:x,
-		y:y,
-		id:id
+const PowerUp = (x, y, id) => {
+	let self = {
+		x: x,
+		y: y,
+		id: id
 	};
 
-	self.update = function() {
-		for(let p in PLAYER_LIST) {
+	self.update = () => {
+		for (let p in PLAYER_LIST) {
 			let player = PLAYER_LIST[p];
-			if(getDistance(self.x, self.y, player.x, player.y) < 16) {
+			if (getDistance(self.x, self.y, player.x, player.y) < 16) {
 				player.powerupTime += 10;
 				player.score += 750;
 				self.destroy();
@@ -458,7 +449,7 @@ var PowerUp = function(x, y, id) {
 		};
 	};
 
-    self.destroy = function() {
+    self.destroy = () => {
 		delete POWERUP_LIST[self.id];
 		self = null;
 	};
@@ -467,44 +458,43 @@ var PowerUp = function(x, y, id) {
 };
 
 // ---------- Functions ----------
-function getPlayerByID(id) {
-	for(let p in PLAYER_LIST) {
-		let player = PLAYER_LIST[p];
-		if(player.id == id) {
+const getPlayerByID = (id) => {
+	for (let p in PLAYER_LIST) {
+		const player = PLAYER_LIST[p];
+		if (player.id == id) {
 			return player;
 		};
 	};
 };
 
-function getDistance(x1, y1, x2, y2) {
-	let a = x1 - x2;
-	let b = y1 - y2;
-
+const getDistance = (x1, y1, x2, y2) => {
+	const a = x1 - x2;
+	const b = y1 - y2;
 	return Math.sqrt( a*a + b*b );
 };
 
-function getSmallest(obj) {
-	let min,key;
+const getSmallest = (obj) => {
+	let min, key;
 	for(let k in obj) {
-		if(typeof(min)=='undefined') {
-			min=obj[k];
-			key=k;
+		if (typeof(min) == 'undefined') {
+			min = obj[k];
+			key = k;
 			continue;
 		};
-		if(obj[k]<min) {
-			min=obj[k]; 
-			key=k;
+		if (obj[k] < min) {
+			min = obj[k]; 
+			key = k;
 		};
 	};
 	return key;
 };
 
-function countActivePlayers() {
+const countActivePlayers = () => {
 	let result = 0;
-	for(let p in PLAYER_LIST) {
-		let player = PLAYER_LIST[p];
-		if(player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
-			result++;
+	for (let p in PLAYER_LIST) {
+		const player = PLAYER_LIST[p];
+		if (player.joinKickTimeout < 0 && player.spawnCooldown < 0) {
+			++result;
 		};
 	};
 	return result;
